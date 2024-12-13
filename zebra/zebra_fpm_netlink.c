@@ -181,7 +181,13 @@ static int netlink_route_info_add_nh(struct netlink_route_info *ri,
 	nhi.recursive = nexthop->rparent ? 1 : 0;
 	nhi.type = nexthop->type;
 	nhi.if_index = nexthop->ifindex;
-	nhi.weight = nexthop->weight;
+	if(nexthop->rparent) {
+		nhi.weight = (nexthop->rparent)->weight;
+		zfpm_debug("%s: Weight %u (Parent: %u)", __func__, nexthop->weight, (nexthop->rparent)->weight);
+	} else {
+		nhi.weight = nexthop->weight;
+		zfpm_debug("%s: Weight %u", __func__, nexthop->weight);
+	}
 
 	if (nexthop->type == NEXTHOP_TYPE_IPV4
 	    || nexthop->type == NEXTHOP_TYPE_IPV4_IFINDEX) {

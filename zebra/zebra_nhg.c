@@ -1880,6 +1880,9 @@ static struct nexthop *nexthop_set_resolved(afi_t afi,
 				      &nexthop->nh_srv6->seg6_segs);
 	}
 
+	if(nexthop->weight)
+		zlog_debug("%s: Next hop weight %u",
+			__func__, nexthop->weight);
 	resolved_hop->rparent = nexthop;
 	_nexthop_add(&nexthop->resolved, resolved_hop);
 

@@ -1800,10 +1800,16 @@ static bool _netlink_route_build_multipath(
 			*src = &nexthop->src;
 
 		if (IS_ZEBRA_DEBUG_KERNEL)
-			zlog_debug("%s: (%s): %pFX nexthop via %pI4 %s if %u vrf %s(%u)",
-				   __func__, routedesc, p, &nexthop->gate.ipv4,
-				   label_buf, nexthop->ifindex,
-				   VRF_LOGNAME(vrf), nexthop->vrf_id);
+			if(nexthop->rparent)
+				zlog_debug("%s: (%s): %pFX nexthop via %pI4 %s if %u vrf %s(%u) weight %u (Parent: %u)",
+					__func__, routedesc, p, &nexthop->gate.ipv4,
+					label_buf, nexthop->ifindex,
+					VRF_LOGNAME(vrf), nexthop->vrf_id, nexthop->weight, (nexthop->rparent)->weight);
+			else
+				zlog_debug("%s: (%s): %pFX nexthop via %pI4 %s if %u vrf %s(%u) weight %u",
+					__func__, routedesc, p, &nexthop->gate.ipv4,
+					label_buf, nexthop->ifindex,
+					VRF_LOGNAME(vrf), nexthop->vrf_id, nexthop->weight);
 	}
 	if (nexthop->type == NEXTHOP_TYPE_IPV6
 	    || nexthop->type == NEXTHOP_TYPE_IPV6_IFINDEX) {
@@ -1840,13 +1846,23 @@ static bool _netlink_route_build_multipath(
 			*src = &nexthop->src;
 
 		if (IS_ZEBRA_DEBUG_KERNEL)
-			zlog_debug("%s: (%s): %pFX nexthop via if %u vrf %s(%u)",
+		{
+			if(nexthop->rparent)
+				zlog_debug("%s: (%s): %pFX nexthop via if %u vrf %s(%u) weight %u (Parent: %u)",
 				   __func__, routedesc, p, nexthop->ifindex,
-				   VRF_LOGNAME(vrf), nexthop->vrf_id);
+				   VRF_LOGNAME(vrf), nexthop->vrf_id, nexthop->weight, (nexthop->rparent)->weight);
+			else
+				zlog_debug("%s: (%s): %pFX nexthop via if %u vrf %s(%u) weight %u",
+				   __func__, routedesc, p, nexthop->ifindex,
+				   VRF_LOGNAME(vrf), nexthop->vrf_id, nexthop->weight);
+		}
 	}
 
 	if (nexthop->weight)
-		rtnh->rtnh_hops = nexthop->weight - 1;
+		if(nexthop->rparent)
+			rtnh->rtnh_hops = (nexthop->rparent)->weight - 1;
+		else
+			rtnh->rtnh_hops = nexthop->weight - 1;
 
 	if (!_netlink_set_tag(nlmsg, req_size, tag))
 		return false;
